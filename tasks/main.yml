@@ -1,0 +1,22 @@
+---
+
+- name: manage user
+  user:
+    name: "{{ item.name }}"
+    group: "{{ item.group | default(omit) }}"
+    groups: "{{ item.groups | default(omit) }}"
+    append: "{{ item.append | default(True) }}"
+    state: "{{ item.state | default('present') }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    system: "{{ item.system | default(omit) }}"
+  loop: "{{ user_list }}"
+
+- name: set authorized key
+  authorized_key:
+    user: "{{ item.name }}"
+    state: present
+    exclusive: True
+    key: "{{ item.authorized_key | default(item.authorized_keys) }}"
+    key_options: "{{ item.authorized_key_options | default(item.authorized_keys_options) | default(omit) }}"
+  when: item.state | default('present') == 'present'
+  loop: "{{ user_list }}"
