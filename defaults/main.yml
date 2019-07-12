@@ -2,4 +2,4 @@
 
 user_list: []
 # - name:
-#   pubkey:
+#   authorized_key:
