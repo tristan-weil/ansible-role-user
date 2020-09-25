@@ -1,0 +1,31 @@
+---
+
+- hosts: all
+  name: 'Converge'
+  become: True
+
+  tasks:
+    - name: 'create group'
+      group:
+        name: "{{ item }}"
+      loop:
+        - molgroup1
+        - molgroup2
+
+    - import_role:
+        name: 'ansible-role-user'
+      vars:
+        user_list:
+          - name: 'molecule1'
+            append: False
+            group: 'molgroup1'
+            groups:
+              - molgroup2
+
+          - name: 'molecule2'
+            append: True
+            groups:
+              - molgroup1
+              - molgroup2
+            authorized_key: ssh-rsa AAAAAAAxxxxxZZZZZZ
+            authorized_key_options: 'no-port-forwarding,from="10.0.1.1"'

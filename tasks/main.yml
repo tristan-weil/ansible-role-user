@@ -1,6 +1,6 @@
 ---
 
-- name: manage user
+- name: 'manage user'
   user:
     name: "{{ item.name }}"
     group: "{{ item.group | default(omit) }}"
@@ -9,14 +9,17 @@
     state: "{{ item.state | default('present') }}"
     shell: "{{ item.shell | default('/bin/bash') }}"
     system: "{{ item.system | default(omit) }}"
+    login_class: "{{ item.login_class | default(omit) }}"
   loop: "{{ user_list }}"
 
-- name: set authorized key
+- name: 'set authorized key'
   authorized_key:
     user: "{{ item.name }}"
-    state: present
+    state: 'present'
     exclusive: True
     key: "{{ item.authorized_key | default(item.authorized_keys) }}"
     key_options: "{{ item.authorized_key_options | default(item.authorized_keys_options) | default(omit) }}"
-  when: item.state | default('present') == 'present'
+  when: >
+    item.state | default('present') == 'present'
+    and (item.authorized_key is defined or item.authorized_keys is defined)
   loop: "{{ user_list }}"

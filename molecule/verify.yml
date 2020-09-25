@@ -1,0 +1,49 @@
+---
+
+- hosts: all
+  name: 'Verify'
+  become: True
+  gather_facts: True
+
+  tasks:
+    - name: 'Check users'
+      user:
+        name: "{{ item.user }}"
+        group: "{{ item.group }}"
+        groups: "{{ item.groups }}"
+        append: False
+      loop:
+        - user: 'molecule1'
+          group: 'molgroup1'
+          groups:
+            - 'molgroup2'
+
+        - user: 'molecule2'
+          group: 'molecule2'
+          groups:
+            - 'molgroup1'
+            - 'molgroup2'
+      register: __verify_users
+      failed_when: __verify_users.changed
+
+    - name: 'Stat the authorized_keys file'
+      stat:
+        path: '/home/molecule2/.ssh/authorized_keys'
+      register: __verify_stat
+
+    - name: 'Check the owner of the authorized_keys file'
+      assert:
+        that:
+          - __verify_stat.stat.exists
+          - __verify_stat.stat.pw_name == 'molecule2'
+          - __verify_stat.stat.mode == '0600'
+
+    - name: 'Get the content of the authorized_keys file'
+      slurp:
+        path: '/home/molecule2/.ssh/authorized_keys'
+      register: __verify_slurp
+
+    - name: 'Check the content of the authorized_keys file'
+      assert:
+        that:
+          - __verify_slurp.content | b64decode | regex_search('no-port-forwarding,from="10.0.1.1" ssh-rsa AAAAAAAxxxxxZZZZZZ')
